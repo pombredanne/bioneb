@@ -15,12 +15,19 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
-class ContigTest(unittest.TestCase):
-    def test_contig(self):
-        fname = os.path.join(os.path.dirname(__file__), "data", "contig.gb")
+class StemLoopTest(unittest.TestCase):
+    def test_stem_loop(self):
+        fname = os.path.join(os.path.dirname(__file__), "data", "stem-loop.gb")
         parser = gb.GenbankParser(fname)
-        self.assertRaises(gb.GenbankError, parser.sequence().next)
-        loc = parser.contig()
-        self.assertEqual(isinstance(loc, dict), True)
+        features = list(parser.features())
+        self.assertEqual(len(features), 14)
+        self.assertEqual(features[6], {
+                "type": "stem_loop",
+                "location": {
+                    "strand": "forward",
+                    "start": {"fuzzy": False, "coord": 3505},
+                    "end": {"fuzzy": False, "coord": 3594}
+                }
+            })

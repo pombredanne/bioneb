@@ -15,7 +15,7 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class OrderTest(unittest.TestCase):
     def test_order(self):

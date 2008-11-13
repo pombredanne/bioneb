@@ -15,15 +15,12 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
-class BondTest(unittest.TestCase):
-    def test_bond(self):
-        fname = os.path.join(os.path.dirname(__file__), "data", "bond.gb")
+class FuzzyTest(unittest.TestCase):
+    def test_fuzzy(self):
+        fname = os.path.join(os.path.dirname(__file__), "data", "keywords.gb")
         parser = gb.GenbankParser(fname)
-        features = list(parser.features())
-        bonds = filter(lambda x: x["type"] == "bond", features)
-        self.assertEqual(len(bonds), 4)
-        expected = [[11, 62], [15, 35], [21, 45], [25, 47]]
-        for idx, bond in enumerate(bonds):
-            self.assertEqual(bond["location"]["bond"], expected[idx])
+        info = parser.info()
+        self.assertEqual(info["keywords"], ["Neurotoxin", "Sodium channel inhibitor", "Amidation"])
+

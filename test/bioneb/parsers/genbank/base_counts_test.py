@@ -15,7 +15,7 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class BaseCountsTest(unittest.TestCase):
     def check_valid(self, fname, expected):

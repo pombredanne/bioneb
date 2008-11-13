@@ -15,12 +15,12 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
-class SegmentTest(unittest.TestCase):
-    def test_segment(self):
-        fname = os.path.join(os.path.dirname(__file__), "data", "order.gb")
+class ContigTest(unittest.TestCase):
+    def test_contig(self):
+        fname = os.path.join(os.path.dirname(__file__), "data", "contig.gb")
         parser = gb.GenbankParser(fname)
-        info = parser.info()
-        self.assertEqual(info["segment"]["id"], 1)
-        self.assertEqual(info["segment"]["total"], 6)
+        self.assertRaises(gb.GenbankError, parser.sequence().next)
+        loc = parser.contig()
+        self.assertEqual(isinstance(loc, dict), True)

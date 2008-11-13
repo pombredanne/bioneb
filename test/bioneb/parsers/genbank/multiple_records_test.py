@@ -15,7 +15,7 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class MultipleRecordsTest(unittest.TestCase):
     def test_multiple_records(self):

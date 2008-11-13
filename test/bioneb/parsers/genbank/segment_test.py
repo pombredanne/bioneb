@@ -15,19 +15,12 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
-class StemLoopTest(unittest.TestCase):
-    def test_stem_loop(self):
-        fname = os.path.join(os.path.dirname(__file__), "data", "stem-loop.gb")
+class SegmentTest(unittest.TestCase):
+    def test_segment(self):
+        fname = os.path.join(os.path.dirname(__file__), "data", "order.gb")
         parser = gb.GenbankParser(fname)
-        features = list(parser.features())
-        self.assertEqual(len(features), 14)
-        self.assertEqual(features[6], {
-                "type": "stem_loop",
-                "location": {
-                    "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 3505},
-                    "end": {"fuzzy": False, "coord": 3594}
-                }
-            })
+        info = parser.info()
+        self.assertEqual(info["segment"]["id"], 1)
+        self.assertEqual(info["segment"]["total"], 6)

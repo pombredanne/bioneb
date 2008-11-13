@@ -16,7 +16,7 @@ import datetime
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class SimpleTests(unittest.TestCase):
     def test_simple_1(self):

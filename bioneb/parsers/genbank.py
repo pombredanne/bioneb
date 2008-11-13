@@ -22,7 +22,9 @@ import re
 import sys
 import time
 
-from neb.utils.undo import UndoHandle
+from bioneb.utils.undo import UndoHandle
+
+__all__ = ["GenbankError", "LocationError", "GenbankParser"]
 
 class GenbankError(Exception):
     def __init__(self,filename=None, lineno=None, mesg='Parsing failed.'):

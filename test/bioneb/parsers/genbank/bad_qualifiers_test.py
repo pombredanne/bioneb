@@ -15,7 +15,7 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class BadQualifiersTest(unittest.TestCase):
     def test_bad_qualifiers_1(self):

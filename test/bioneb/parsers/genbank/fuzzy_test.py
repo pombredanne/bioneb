@@ -15,12 +15,21 @@
 import os
 import unittest
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 class FuzzyTest(unittest.TestCase):
     def test_fuzzy(self):
-        fname = os.path.join(os.path.dirname(__file__), "data", "keywords.gb")
+        fname = os.path.join(os.path.dirname(__file__), "data", "fuzzy.gb")
         parser = gb.GenbankParser(fname)
-        info = parser.info()
-        self.assertEqual(info["keywords"], ["Neurotoxin", "Sodium channel inhibitor", "Amidation"])
-
+        features = list(parser.features())
+        self.assertEqual(len(features), 3)
+        self.assertEqual(features[1]["location"], {
+                "strand": "forward",
+                "start": {"fuzzy": "before", "coord": 0},
+                "end": {"fuzzy": False, "coord": 50}
+            })
+        self.assertEqual(features[2]["location"], {
+                "strand": "forward",
+                "start": {"fuzzy": False, "coord": 51},
+                "end": {"fuzzy": "after", "coord": 704}
+            })
