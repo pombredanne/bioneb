@@ -16,7 +16,7 @@
 
 from __future__ import with_statement
 
-import logging as log
+import errno
 import optparse as op
 import os
 import pprint
@@ -25,7 +25,6 @@ import couchdb
 import simplejson
 
 def main():
-    log.getLogger().setLevel(log.DEBUG)
     options = [
         op.make_option("-d", "--db", dest="db", metavar="URL", default="http://127.0.0.1:5984/taxonomy",
             help="CouchDB database URL [%default]"),
@@ -33,20 +32,35 @@ def main():
             help="Directory containing an NCBI taxonomy dump. [%default]"),
         op.make_option("-c", "--chunk", dest="chunk", metavar="INT", type="int", default=10000,
             help="Number of nodes to process at a time. [%default]"),
+        op.make_option("-z", "--full-trace", dest="trace", action="store_true", default=False,
+            help="Display a full traceback on error."),
     ]
     parser = op.OptionParser(usage="usage: %prog [OPTIONS]", option_list=options)
     opts, args = parser.parse_args()
-    paths = read_paths(opts.taxonomy)
-    names = read_names(opts.taxonomy)
-    divisions = read_divisions(opts.taxonomy)
-    gencodes = read_gencodes(opts.taxonomy)
     if len(args) != 0:
         print "Unknown arguments: %s" % '\t'.join(args)
         parser.print_help()
         exit(-1)
-    for nodes in stream_nodes(opts.taxonomy, names, paths, divisions, gencodes, opts.chunk):
-        merge_nodes(opts.db, nodes)
-    remove_nodes(opts.taxonomy, opts.db)
+    try:
+        print "Reading paths..."
+        paths = read_paths(opts.taxonomy)
+        print "Reading names..."
+        names = read_names(opts.taxonomy)
+        print "Reading divisions..."
+        divisions = read_divisions(opts.taxonomy)
+        print "Reading genetic codes..."
+        gencodes = read_gencodes(opts.taxonomy)
+        print "Merging... (Could take awhile)"
+        for nodes in stream_nodes(opts.taxonomy, names, paths, divisions, gencodes, opts.chunk):
+            merge_nodes(opts.db, nodes)
+        print "Removing..."
+        remove_nodes(opts.taxonomy, opts.db)
+        print "Done"
+    except IOError, inst:
+        if opts.trace:
+            raise
+        print str(inst)
+        exit(-2)
 
 def read_paths(dirname):
     ret = {}
@@ -174,7 +188,6 @@ def build(filename, fields):
         yield dict(zip(fields, record))
 
 def stream_file(filename):
-    log.info("Reading: %s" % filename)
     with open(filename) as handle:
         for line in handle:
             assert line.endswith("\t|\n")

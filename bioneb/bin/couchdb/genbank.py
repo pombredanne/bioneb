@@ -25,7 +25,7 @@ import uuid
 import couchdb
 import simplejson
 
-import neb.parsers.genbank as gb
+import bioneb.parsers.genbank as gb
 
 def main():
     options = [
@@ -42,9 +42,10 @@ def main():
         print "Unknown arguments: %s" % '\t'.join(args)
         parser.print_help()
         exit(-1)
-    for fname in stream_file_names(opts.genbank, opts.pattern):
-        print "Loading: %s" % fname
-        load_genbank(fname, opts.db)
+    print "Under construction."
+    #for fname in stream_file_names(opts.genbank, opts.pattern):
+    #    print "Loading: %s" % fname
+    #    load_genbank(fname, opts.db)
 
 def load_genbank(fname, dburl):
     db = couchdb.Database(dburl)
