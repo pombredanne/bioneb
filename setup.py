@@ -24,17 +24,18 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     
     packages = [
-        "neb",
-        "neb.bin",
-        "neb.bin.couchdb",
-        "neb.parsers",
-        "neb.utils"
+        "bioneb",
+        "bioneb.bin",
+        "bioneb.bin.couchdb",
+        "bioneb.parsers",
+        "bioneb.utils"
     ],
     
     entry_points = {
