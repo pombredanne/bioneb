@@ -40,8 +40,8 @@ setup(
     
     entry_points = {
         "console_scripts": [
-            "bioneb-taxonomy = neb.bin.couchdb.taxonomy:main",
-            "bioneb-genbank = neb.bin.couchdb.genbank:main",
+            "bioneb-taxonomy = bioneb.bin.couchdb.taxonomy:main",
+            "bioneb-genbank = bioneb.bin.couchdb.genbank:main",
         ]
     }
 )
