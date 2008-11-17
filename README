@@ -5,4 +5,12 @@ A python module and scripts that I find generally useful for bioinformatics. I
 place heavy emphasis on test and formats that are easily representable as JSON
 for use with CouchDB.
 
-Hosted at: http://github.com/davisp/bio-neb
+Installation
+============
+
+ $ sudo easy_install bioneb
+
+Project Page
+============
+
+http://github.com/davisp/bio-neb
