@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name = "BioNEB",
-    version = "1",
+    version = "0.1",
     description = "BioNEB - Bioinformatics utilities",
     long_description = "BioNEB - Bioinformatics utilities developed at New England Biolabs",
     author = "Paul Joseph Davis",
@@ -29,6 +29,8 @@ setup(
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
+    
+    requires = ["httplib2", "simplejson"],
     
     packages = [
         "bioneb",

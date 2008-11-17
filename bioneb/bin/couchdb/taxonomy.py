@@ -21,8 +21,7 @@ import optparse as op
 import os
 import pprint
 
-import couchdb
-import simplejson
+from bioneb.couchdb import CouchDB
 
 def main():
     options = [
@@ -155,7 +154,7 @@ def make_path(taxon, paths, ret=None):
     return make_path(paths[taxon], paths, ret)
 
 def merge_nodes(dburl, nodes):
-    db = couchdb.Database(dburl)
+    db = CouchDB(dburl)
     docs = []
     rows = db.view("_all_docs", keys=[n["_id"] for n in nodes.itervalues()], include_docs=True)
     for row in rows:
@@ -169,10 +168,10 @@ def merge_nodes(dburl, nodes):
                 docs.append(node)
     docs.extend(nodes.itervalues())
     if len(docs) > 0:
-        db.update(docs)
+        db.bulk_docs(docs)
 
 def remove_nodes(dirname, dburl):
-    db = couchdb.Database(dburl)
+    db = CouchDB(dburl)
     nodes = set()
     for record in stream_file(os.path.join(dirname, "delnodes.dmp")):
         nodes.add(record[0])
