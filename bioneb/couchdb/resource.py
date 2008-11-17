@@ -16,7 +16,7 @@ import logging
 import urllib
 
 import httplib2
-import simplejson
+import simplejson as json
 
 log = logging.getLogger(__name__)
 
@@ -83,27 +83,36 @@ class Resource(object):
         if headers is None:
             headers = {}
         if body is not None and not isinstance(body, basestring):
-            headers.setdefault("Content-Type", "application/json")
+            headers["Content-Type"] = "application/json"
             body = json.dumps(body)
 
         uri = self.encode(path, **kwargs)
         log.debug("%s %s" % (method, uri))
 
-        resp, cont = self.http.request(uri, method=method, body=content, headers=headers)
+        resp, cont = self.http.request(uri, method=method, body=body, headers=headers)
 
         if expect is None:
-            pass
-        elif isinstance(expect, int) and resp.status != expect:
-            self._raise(resp.status, resp.reason, cont)
-        elif resp.status not in expect:
-            self._raise(resp.status, resp.reason, cont)
+            if resp.status in self.ERRORS:
+                self._rase(resp.status, resp.reason, cont)
+        elif isinstance(expect, int):
+            if resp.status != expect:
+                self._raise(resp.status, resp.reason, cont)
+        elif isinstance(expect, list) or isinstance(expect, tuple):
+            if resp.status not in expect:
+                self._raise(resp.status, resp.reason, cont)
+        else:
+            raise ValueError("expect must be None, an integer, a list, or tuple.")
 
         if not raw:
             return json.loads(cont)
         return cont
 
     def encode(self, path, **kwargs):
-        return "%s?%s" % (self._encode_path(path), self._encode_qs(**kwargs))
+        uri = self._encode_path(path)
+        qs = self._encode_qs(**kwargs)
+        if qs:
+            return "%s?%s" % (uri, qs)
+        return uri
     
     def _encode_path(self, path):
         if isinstance(path, basestring):
@@ -117,10 +126,8 @@ class Resource(object):
             if kw in ["key", "startkey", "endkey"]:
                 val = json.dumps(val)
             parts.append('='.join([kw, val]))
-        if len(parts) > 0:
-            return ''.join([uri, "?", ''.join(parts)])
-        return uri
+        return '&'.join(parts)
 
     def _raise(self, code, msg, body):
         etype = self.ERRORS.get(code, ServerError)
-        return etype(code, msg, body)
+        raise etype(code, msg, body)

@@ -22,7 +22,7 @@ __all__ = ['CouchDB']
 
 class CouchDB(object):
     def __init__(self, name, host="http://127.0.0.1:5984"):
-        if not CouchDB._valid_db_name(name):
+        if not CouchDB._validate(name):
             raise ValueError("Invalid database name: %r" % name)
         self.name = name
         self.resource = resource.Resource(host=host)
@@ -39,11 +39,12 @@ class CouchDB(object):
 
     def replicate(self, target):
         body = {"source": self.url, "target": target}
-        return self.resrouce.post(["_replicate"], body=body, expect=200)
+        return self.resource.post(["_replicate"], body=body, expect=200)
 
     def exists(self):
         try:
-            self.info()
+            ret = self.info()
+            assert "error" not in ret
             return True
         except resource.NotFoundError:
             return False
@@ -69,10 +70,10 @@ class CouchDB(object):
     def open(self, docid, **kwargs):
         return self.resource.get([self.name, docid], expect=200)
 
-    def save(self, doc, **kwargs):
+    def save(self, doc, rev=None, **kwargs):
         if not doc.get("_id", None):
             doc["_id"] = uuid.uuid4().hex.upper()
-        ret = self.request.put([self.name, doc["_id"]], body=doc, expect=201, **kwargs)
+        ret = self.resource.put([self.name, doc["_id"]], body=doc, expect=201, **kwargs)
         doc["_rev"] = ret["rev"]
         return ret
 
@@ -97,17 +98,17 @@ class CouchDB(object):
         for d in docs:
             if not d.get("_id"):
                 d["_id"] = uuid.uuid4().hex.upper()
-        ret = self.request.post([self.name, "_bulk_docs"], body={"docs": docs}, expect=201, **kwargs)
+        ret = self.resource.post([self.name, "_bulk_docs"], body={"docs": docs}, expect=201, **kwargs)
         for idx, doc in enumerate(ret["new_revs"]):
             docs[idx]["_rev"] = doc["rev"]
         return ret
 
-    def save_attachement(self, doc, content, rev=None, filename=None, ctype=None):
-        if filename is None and not hasattr(content, "name"):
+    def save_attachment(self, doc, body, rev=None, filename=None, ctype=None):
+        if filename is None and not hasattr(body, "name"):
             raise ValueError("No filename specified for attachment.")
-        filename = filename or content.name
-        if not isinstance(content, basestring):
-            content = ''.join(list(content))
+        filename = filename or body.name
+        if not isinstance(body, basestring):
+            body = ''.join(list(iter(body)))
         if ctype is None:
             ctype = "text/plain"
             guessed = mimetypes.guess_type(filename)
@@ -117,7 +118,7 @@ class CouchDB(object):
         if not isinstance(doc, basestring):
             docid = doc["_id"]
             rev = doc["_rev"]
-        ret = self.resource.put([self.name, docid, filename], body=content, expect=201,
+        ret = self.resource.put([self.name, docid, filename], body=body, expect=201,
                                     headers={"Content-Type": ctype}, rev=rev)
         if not isinstance(doc, basestring):
             doc["_rev"] = ret["rev"]
@@ -159,5 +160,5 @@ class CouchDB(object):
 
     VALID_DB_RE = re.compile(r"^[a-z0-9_$()+-/]+$")
     @classmethod
-    def _validate_db_name(klass, dbname):
-        return VALID_DB_RE.match(dbname) is not None
+    def _validate(klass, dbname):
+        return klass.VALID_DB_RE.match(dbname) is not None
