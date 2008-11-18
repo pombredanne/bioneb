@@ -24,7 +24,7 @@ except ImportError:
 
 setup(
     name = "BioNEB",
-    version = "0.1",
+    version = "0.2",
     description = "BioNEB - Bioinformatics utilities",
     long_description = "BioNEB - Bioinformatics utilities developed at New England Biolabs",
     author = "Paul Joseph Davis",
