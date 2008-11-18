@@ -50,6 +50,7 @@ setup(
         "bioneb",
         "bioneb.bin",
         "bioneb.bin.couchdb",
+        "bioneb.couchdb",
         "bioneb.parsers",
         "bioneb.utils"
     ],
