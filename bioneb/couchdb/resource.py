@@ -123,7 +123,7 @@ class Resource(object):
     def _encode_qs(self, **kwargs):
         parts = []
         for kw, val in kwargs.iteritems():
-            if kw in ["key", "startkey", "endkey"]:
+            if not isinstance(val, basestring):
                 val = json.dumps(val)
             parts.append('='.join([kw, val]))
         return '&'.join(parts)

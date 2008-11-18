@@ -25,41 +25,39 @@ from bioneb.couchdb import CouchDB
 
 def main():
     options = [
-        op.make_option("-d", "--db", dest="db", metavar="URL", default="http://127.0.0.1:5984/taxonomy",
-            help="CouchDB database URL [%default]"),
-        op.make_option("-t", "--taxonomy", dest="taxonomy", metavar="DIR", default="./taxonomy",
-            help="Directory containing an NCBI taxonomy dump. [%default]"),
+        op.make_option("-u", "--url", dest="url", metavar="URL", default="http://127.0.0.1:5984",
+            help="Base URL of the CouchDB server. [%default]"),
+        op.make_option("-d", "--db", dest="db", metavar="DBNAME", default="taxonomy",
+            help="Database name. [%default]"),
         op.make_option("-c", "--chunk", dest="chunk", metavar="INT", type="int", default=10000,
-            help="Number of nodes to process at a time. [%default]"),
-        op.make_option("-z", "--full-trace", dest="trace", action="store_true", default=False,
-            help="Display a full traceback on error."),
+            help="Number of nodes to process at a time. [%default]")
     ]
-    parser = op.OptionParser(usage="usage: %prog [OPTIONS]", option_list=options)
+    parser = op.OptionParser(usage="usage: %prog [OPTIONS] TAXONOMY_DIR", option_list=options)
     opts, args = parser.parse_args()
-    if len(args) != 0:
-        print "Unknown arguments: %s" % '\t'.join(args)
+    if len(args) == 0:
+        print "No taxonomy directory specified."
         parser.print_help()
         exit(-1)
-    try:
-        print "Reading paths..."
-        paths = read_paths(opts.taxonomy)
-        print "Reading names..."
-        names = read_names(opts.taxonomy)
-        print "Reading divisions..."
-        divisions = read_divisions(opts.taxonomy)
-        print "Reading genetic codes..."
-        gencodes = read_gencodes(opts.taxonomy)
-        print "Merging... (Could take awhile)"
-        for nodes in stream_nodes(opts.taxonomy, names, paths, divisions, gencodes, opts.chunk):
-            merge_nodes(opts.db, nodes)
-        print "Removing..."
-        remove_nodes(opts.taxonomy, opts.db)
-        print "Done"
-    except IOError, inst:
-        if opts.trace:
-            raise
-        print str(inst)
-        exit(-2)
+    elif len(args) > 1:
+        print "Unknwon arguments: '%s'" % ' '.join(args)
+        parser.print_help()
+        exit(-1)
+    taxonomy_dir = args[0]
+    required = ["nodes.dmp", "names.dmp", "division.dmp", "gencode.dmp"]
+    for base in required:
+        fname = os.path.join(taxonomy_dir, base)
+        if not os.path.isfile(fname):
+            print "Failed to find required file: %s" % fname
+    db = CouchDB(opts.db, host=opts.url)
+    if not db.exists():
+        db.create()
+    paths = read_paths(taxonomy_dir)
+    names = read_names(taxonomy_dir)
+    divisions = read_divisions(taxonomy_dir)
+    gencodes = read_gencodes(taxonomy_dir)
+    for nodes in stream_nodes(taxonomy_dir, names, paths, divisions, gencodes, opts.chunk):
+        merge_nodes(db, nodes)
+    remove_nodes(db, taxonomy_dir, opts.chunk)
 
 def read_paths(dirname):
     ret = {}
@@ -97,7 +95,7 @@ def read_gencodes(dirname):
         ret[record["gc_id"]] = record
     return ret
 
-def stream_nodes(dirname, names, paths, divisions, gencodes, chunk_size=10000):
+def stream_nodes(dirname, names, paths, divisions, gencodes, chunk_size):
     ret = {}
     fields = ["taxon", "parent", "rank", "embl_code", "div_id", "inh_div_id", "gc_id",
               "inh_gc_id", "mgc_id", "inh_mgc_id", "gb_hidden", "subtree_hidden", "comments"]
@@ -153,34 +151,40 @@ def make_path(taxon, paths, ret=None):
     ret.insert(0, paths[taxon])
     return make_path(paths[taxon], paths, ret)
 
-def merge_nodes(dburl, nodes):
-    db = CouchDB(dburl)
+def merge_nodes(db, nodes):
     docs = []
-    rows = db.view("_all_docs", keys=[n["_id"] for n in nodes.itervalues()], include_docs=True)
-    for row in rows:
-        node = nodes.pop(row.key, None)
-        assert node is not None, "Invalid key returned: %s" % row.key
+    resp = db.all_docs(keys=[n["_id"] for n in nodes.itervalues()], include_docs=True)
+    for row in resp["rows"]:
+        node = nodes.pop(row["key"], None)
+        assert node is not None, "Invalid key returned: %s" % row["key"]
         if row.get("error", None) == "not_found":
             docs.append(node)
         else:
-            node["_rev"] = row.doc["_rev"]
-            if node != row.doc:
+            node["_rev"] = row["doc"]["_rev"]
+            if node != row["doc"]:
                 docs.append(node)
     docs.extend(nodes.itervalues())
     if len(docs) > 0:
         db.bulk_docs(docs)
 
-def remove_nodes(dirname, dburl):
-    db = CouchDB(dburl)
+def remove_nodes(db, dirname, chunk_size):
     nodes = set()
-    for record in stream_file(os.path.join(dirname, "delnodes.dmp")):
-        nodes.add(record[0])
-    for record in stream_file(os.path.join(dirname, "merged.dmp")):
-        nodes.add(record[0])
-    for node in nodes:
-        doc = db.get(node, None)
-        if doc and doc.get("_deleted", False):
-            db.delete(doc)
+    with open(os.path.join(dirname, "nodes.dmp")) as handle:
+        for line in handle:
+            nodes.add(line.split()[0])
+    resp = db.all_docs(count=chunk_size)
+    while len(resp["rows"]) > 0:
+        to_rem = []
+        for row in resp["rows"]:
+            if row["id"] not in nodes:
+                to_rem.append((row["id"], row["value"]["rev"]))
+        if len(to_rem) > 0:
+            for info in to_rem:
+                db.delete(info[0], rev=info[1])
+        resp = db.all_docs(count=chunk_size, key=resp["rows"][-1]["id"])
+
+def remove_set(db, nodes):
+    pass
 
 def build(filename, fields):
     for record in stream_file(filename):

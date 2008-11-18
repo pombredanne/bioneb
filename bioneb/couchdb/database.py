@@ -89,10 +89,10 @@ class CouchDB(object):
         return ret
 
     def all_docs(self, **kwargs):
-        return self.resource.get([self.name, "_all_docs"], expect=200)
+        return self._view([self.name, "_all_docs"], **kwargs)
 
     def all_docs_by_seq(self, **kwargs):
-        return self.resource.get([self.name, "_all_docs_by_seq"], expect=200)
+        return self._view([self.name, "_all_docs_by_seq"], **kwargs)
 
     def bulk_docs(self, docs, **kwargs):
         for d in docs:
@@ -149,11 +149,14 @@ class CouchDB(object):
             body["keys"] = keys
         return self.resource.post([self.name, "_temp_view"], body=body, **kwargs)
 
-    def view(self, doc, view, keys=None, **kwargs):
+    def view(self, doc, view, **kwargs):
+        return self._view([self.name, "_view", doc, view], **kwargs)
+
+    def _view(self, path, keys=None, **kwargs):
         if keys is not None:
-            return self.resource.post([self.name, "_view", doc, view], body={"keys": keys}, expect=200, **kwargs)
+            return self.resource.post(path, body={"keys": keys}, expect=200, **kwargs)
         else:
-            return self.resource.get([self.name, "_view", doc, view], expect=200, **kwargs)
+            return self.resource.get(path, expect=200, **kwargs)
 
     def extension(self, path, method="GET", **kwargs):
         return self.resource.request(method, path, **kwargs)
