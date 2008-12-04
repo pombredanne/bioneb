@@ -44,7 +44,10 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     
-    requires = ["httplib2", "simplejson"],
+    install_requires = """
+        httplib2
+        simplejson
+    """,
     
     packages = [
         "bioneb",

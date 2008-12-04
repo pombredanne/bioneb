@@ -450,6 +450,9 @@ class GenbankParser(object):
                     if cont.endswith('"'):
                         break
                 ret["value"] = ' '.join(ret["value"]).strip('"')
+                # Hackish as all hell
+                if ret["name"].lower() == "cds":
+                    ret["value"] = ''.join(ret["value"].split()).upper()
                 yield ret
 
     def _feature_continuation(self):

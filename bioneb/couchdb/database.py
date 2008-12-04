@@ -16,6 +16,8 @@ import mimetypes
 import uuid
 import re
 
+import simplejson
+
 import resource
 
 __all__ = ['CouchDB']
@@ -61,16 +63,16 @@ class CouchDB(object):
     def compact(self):
         return self.resource.post([self.name, "_compact"], expect=202)
 
-    def get(self, docid, default=None, **kwargs):
-        try:
-            return self.resource.get([self.name, docid], expect=200)
-        except resource.NotFoundError:
-            return default
-
     def open(self, docid, **kwargs):
         return self.resource.get([self.name, docid], expect=200)
 
-    def save(self, doc, rev=None, **kwargs):
+    def get(self, docid, default=None, **kwargs):
+        try:
+            return self.open(docid, **kwargs)
+        except resource.NotFoundError:
+            return default
+
+    def save(self, doc, **kwargs):
         if not doc.get("_id", None):
             doc["_id"] = uuid.uuid4().hex.upper()
         ret = self.resource.put([self.name, doc["_id"]], body=doc, expect=201, **kwargs)
@@ -153,10 +155,17 @@ class CouchDB(object):
         return self._view([self.name, "_view", doc, view], **kwargs)
 
     def _view(self, path, keys=None, **kwargs):
+        kwargs = self._encode_view_args(kwargs)
         if keys is not None:
             return self.resource.post(path, body={"keys": keys}, expect=200, **kwargs)
         else:
             return self.resource.get(path, expect=200, **kwargs)
+
+    def _encode_view_args(self, kwargs):
+        for arg in ["key", "startkey", "endkey", "startkey_docid", "endkey_docid"]:
+            if arg in kwargs:
+                kwargs[arg] = simplejson.dumps(kwargs[arg])
+        return kwargs
 
     def extension(self, path, method="GET", **kwargs):
         return self.resource.request(method, path, **kwargs)
