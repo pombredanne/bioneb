@@ -451,7 +451,7 @@ class GenbankParser(object):
                         break
                 ret["value"] = ' '.join(ret["value"]).strip('"')
                 # Hackish as all hell
-                if ret["name"].lower() == "cds":
+                if ret["name"].lower() == "translation":
                     ret["value"] = ''.join(ret["value"].split()).upper()
                 yield ret
 
