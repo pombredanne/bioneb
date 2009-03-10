@@ -44,26 +44,11 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     
-    install_requires = """
-        httplib2
-        simplejson
-    """,
-    
     packages = [
         "bioneb",
-        "bioneb.bin",
-        "bioneb.bin.couchdb",
-        "bioneb.couchdb",
         "bioneb.parsers",
         "bioneb.utils"
     ],
-    
-    entry_points = {
-        "console_scripts": [
-            "bioneb-taxonomy = bioneb.bin.couchdb.taxonomy:main",
-            "bioneb-genbank = bioneb.bin.couchdb.genbank:main",
-        ]
-    }
 )
         
         
