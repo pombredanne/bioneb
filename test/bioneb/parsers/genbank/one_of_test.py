@@ -24,22 +24,26 @@ class OneOfTest(unittest.TestCase):
         features = list(parser.features())
         self.assertEqual(len(features), 6)
         self.assertEqual(features[1]["location"], {
-                "strand": "forward",
-                "start": {
-                    "one-of": [
-                        {"fuzzy": False, "coord": 1887},
-                        {"fuzzy": False, "coord": 1900}
-                    ]
-                },
-                "end": {"fuzzy": False, "coord": 2199}
-            })
+            "type": "span",
+            "strand": "forward",
+            "start": {
+                "type": "one-of",
+                "args": [
+                    {"type": "single", "fuzzy": False, "coord": 1887},
+                    {"type": "single", "fuzzy": False, "coord": 1900}
+                ]
+            },
+            "end": {"type": "single", "fuzzy": False, "coord": 2199}
+        })
         self.assertEqual(features[3]["location"], {
-                "strand": "forward",
-                "start": {
-                    "one-of": [                        
-                        {"fuzzy": False, "coord": 1887},
-                        {"fuzzy": False, "coord": 1900}
-                    ]
-                },
-                "end": {"fuzzy": False, "coord": 2478}
-            })
+            "type": "span",
+            "strand": "forward",
+            "start": {
+                "type": "one-of",
+                "args": [
+                    {"type": "single", "fuzzy": False, "coord": 1887},
+                    {"type": "single", "fuzzy": False, "coord": 1900}
+                ]
+            },
+            "end": {"type": "single", "fuzzy": False, "coord": 2478}
+        })

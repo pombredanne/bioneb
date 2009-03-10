@@ -24,57 +24,89 @@ class OrderTest(unittest.TestCase):
         features = list(parser.features())
         self.assertEqual(len(features), 5)
         self.assertEqual(features[1]["location"], {
-                "strand": "forward",
-                "order": [
-                    {
-                        "reference": {
-                            "U18266.1": {
-                                "strand": "forward",
-                                "start": {"fuzzy": False, "coord": 1887},
-                                "end": {"fuzzy": False, "coord": 2508}
+            "type": "order",
+            "strand": "forward",
+            "args": [
+                {
+                    "type": "reference",
+                    "args": {
+                        "U18266.1": {
+                            "type": "span",
+                            "strand": "forward",
+                            "start": {
+                                "type": "single", "fuzzy": False, "coord": 1887
+                            },
+                            "end": {
+                                "type": "single", "fuzzy": False, "coord": 2508
                             }
                         }
-                    },
-                    {
-                        "strand": "forward",
-                        "start": {"fuzzy": False, "coord": 0},
-                        "end": {"fuzzy": False, "coord": 269}
-                    },
-                    {
-                        "reference": {
-                            "U18268.1": {
-                                "strand": "forward",
-                                "start": {"fuzzy": False, "coord": 0},
-                                "end": {"fuzzy": False, "coord": 308}
+                    }
+                },
+                {
+                    "type": "span",
+                    "strand": "forward",
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 269}
+                },
+                {
+                    "type": "reference",
+                    "args": {
+                        "U18268.1": {
+                            "type": "span",
+                            "strand": "forward",
+                            "start": {
+                                "type": "single", "fuzzy": False, "coord": 0
+                            },
+                            "end": {
+                                "type": "single", "fuzzy": False, "coord": 308
                             }
                         }
-                    },
-                    {
-                        "reference": {
-                            "U18270.1": {
-                                "strand": "forward",
-                                "start": {"fuzzy": False, "coord": 0},
-                                "end": {"fuzzy": False, "coord": 6904}
+                    }
+                },
+                {
+                    "type": "reference",
+                    "args": {
+                        "U18270.1": {
+                            "type": "span",
+                            "strand": "forward",
+                            "start": {
+                                "type": "single", "fuzzy": False, "coord": 0
+                            },
+                            "end": {
+                                "type": "single", "fuzzy": False, "coord": 6904
                             }
                         }
-                    },
-                    {
-                        "reference": {
-                            "U18269.1": {
-                                "strand": "forward",
-                                "start": {"fuzzy": False, "coord": 0},
-                                "end": {"fuzzy": False, "coord": 127}
+                    }
+                },
+                {
+                    "type": "reference",
+                    "args": {
+                        "U18269.1": {
+                            "type": "span",
+                            "strand": "forward",
+                            "start": {
+                                "type": "single", "fuzzy": False, "coord": 0
+                            },
+                            "end": {
+                                "type": "single", "fuzzy": False, "coord": 127
                             }
                         }
-                    },
-                    {
-                        "reference": {
-                            "U18271.1": {
-                                "strand": "forward",
-                                "start": {"fuzzy": False, "coord": 0},
-                                "end": {"fuzzy": False, "coord": 3233}
+                    }
+                },
+                {
+                    "type": "reference",
+                    "args": {
+                        "U18271.1": {
+                            "type": "span",
+                            "strand": "forward",
+                            "start": {
+                                "type": "single", "fuzzy": False, "coord": 0
+                            },
+                            "end": {
+                                "type": "single", "fuzzy": False, "coord": 3233
                             }
                         }
-                    },                    
-                ]
-            })
+                    }
+                },                    
+            ]
+        })

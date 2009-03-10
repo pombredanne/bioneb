@@ -28,7 +28,8 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(info["locus"]["type"], "aa")
         self.assertEqual(info["locus"]["division"], "ROD")
         self.assertEqual(info["locus"]["date"], datetime.datetime(2000, 11, 1))
-        self.assertEqual(info["definition"], "interferon beta, fibroblast [Mus musculus]")
+        self.assertEqual(info["definition"],
+                                "interferon beta, fibroblast [Mus musculus]")
         self.assertEqual(info["accession"], "NP_034640")
         self.assertEqual(info["gi"], "6754304")
         self.assertEqual(info["versions"], ["NP_034640.1"])
@@ -37,24 +38,27 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(info["source"]["name"], "house mouse")
         self.assertEqual(info["source"]["organism"], "Mus musculus")
         self.assertEqual(info["source"]["lineage"], [
-                        "Eukaryota", "Metazoa", "Chordata", "Craniata", "Vertebrata", "Euteleostomi",
-                        "Mammalia", "Eutheria", "Rodentia", "Sciurognathi", "Muridae", "Murinae", "Mus"
-                    ])
+            "Eukaryota", "Metazoa", "Chordata", "Craniata", "Vertebrata",
+            "Euteleostomi", "Mammalia", "Eutheria", "Rodentia", "Sciurognathi",
+            "Muridae", "Murinae", "Mus"
+        ])
         self.assertEqual(len(info["references"]), 1)
         self.assertEqual(info["references"][0]["start"], 0)
         self.assertEqual(info["references"][0]["end"], 181)
         self.assertEqual(info["references"][0]["authors"], [
-                        "Higashi,Y.", "Sokawa,Y.", "Watanabe,Y.", "Kawade,Y.",
-                        "Ohno,S.", "Takaoka,C.", "Taniguchi,T."
-                    ])
+            "Higashi,Y.", "Sokawa,Y.", "Watanabe,Y.", "Kawade,Y.",
+            "Ohno,S.", "Takaoka,C.", "Taniguchi,T."
+        ])
         self.assertEqual(info["references"][0]["title"],
-                        "structure and expression of a cloned cdna for mouse interferon-beta")
-        self.assertEqual(info["references"][0]["journal"], "J. Biol. Chem. 258, 9522-9529 (1983)")
+        "structure and expression of a cloned cdna for mouse interferon-beta")
+        self.assertEqual(info["references"][0]["journal"],
+                                        "J. Biol. Chem. 258, 9522-9529 (1983)")
         self.assertEqual(info["references"][0]["medline"], "83265757")
         self.assertEqual(info["comment"],
-                        "PROVISIONAL REFSEQ: This record has not yet been subject to final NCBI review. "
-                        "The reference sequence was derived from K00020.1."
-                    )
+            "PROVISIONAL REFSEQ: This record has not yet been subject to "
+            "final NCBI review. The reference sequence was derived from "
+            "K00020.1."
+        )
         features = [
             {
                 "type":         "source",
@@ -63,26 +67,29 @@ class SimpleTests(unittest.TestCase):
                 "map":          "4 42.6 cM",
                 "chromosome":   "4",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 0},
-                    "end": {"fuzzy": False, "coord": 181}
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 181}
                 }
             },
             {
                 "type":         "protein",
                 "product":      "interferon beta, fibroblast",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 0},
-                    "end": {"fuzzy": False, "coord": 181}
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 181}
                 }
             },
             {
                 "type":         "sig_peptide",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 0},
-                    "end": {"fuzzy": False, "coord": 20}
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 20}
                 }
             },
             {
@@ -91,18 +98,20 @@ class SimpleTests(unittest.TestCase):
                 "db_xref":      "CDD:pfam00143",
                 "note":         "interferon",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 0},
-                    "end": {"fuzzy": False, "coord": 181}
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 181}
                 }
             },
             {
                 "type":         "mat_peptide",
                 "product":      "ifn-beta",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 21},
-                    "end": {"fuzzy": False, "coord": 181}
+                    "start": {"type": "single", "fuzzy": False, "coord": 21},
+                    "end": {"type": "single", "fuzzy": False, "coord": 181}
                 }
             },
             {
@@ -111,9 +120,10 @@ class SimpleTests(unittest.TestCase):
                 "db_xref":      "CDD:IFabd",
                 "note":         "IFabd",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 55},
-                    "end": {"fuzzy": False, "coord": 169}
+                    "start": {"type": "single", "fuzzy": False, "coord": 55},
+                    "end": {"type": "single", "fuzzy": False, "coord": 169}
                 }
             },
             {
@@ -122,9 +132,10 @@ class SimpleTests(unittest.TestCase):
                 "db_xref":      ["LocusID:15977", "MGD:MGI:107657"],
                 "coded_by":     "NM_010510.1:21..569",
                 "location": {
+                    "type": "span",
                     "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 0},
-                    "end": {"fuzzy": False, "coord": 181}
+                    "start": {"type": "single", "fuzzy": False, "coord": 0},
+                    "end": {"type": "single", "fuzzy": False, "coord": 181}
                 }
             }
         ]

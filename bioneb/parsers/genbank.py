@@ -497,7 +497,6 @@ class GenbankParser(object):
                         lineno=self._source.lineno, mesg="Unable to parse location: '%s'" % loc )
     
     def _location_complement(self, loc, match, curr):
-        curr["strand"] = "reverse"
         args = self._location_split(match.group("args"))
         self._assert(len(args) == 1, "Invalid `complement` argument list: '%s'" % match.group("args"))
         curr["strand"] = "reverse"
@@ -507,46 +506,54 @@ class GenbankParser(object):
     def _location_join(self, loc, match, curr):
         args = self._location_split(match.group("args"))
         self._assert(len(args) > 1, "Invalid `join` argument list: '%s'" % match.group("args"))
-        curr["join"] = map(self._location_parse, args)
+        curr["type"] = "join"
+        curr["args"] = map(self._location_parse, args)
         return curr
 
     def _location_order(self, loc, match, curr):
         args = self._location_split(match.group("args"))
         self._assert(len(args) > 1, "Invalid `order` argument list: '%s'" % match.group("args"))
-        curr["order"] = map(self._location_parse, args)
+        curr["type"] = "order"
+        curr["args"] = map(self._location_parse, args)
         return curr
 
     def _location_bond(self, loc, match, curr):
         args = self._location_split(match.group("args"))
         self._assert(len(args) == 2, "Invalid `bond` argument list: '%s'" % match.group("args"))
-        curr["bond"] = map(lambda a: int(a)-1, args)
+        curr["type"] = "bond"
+        curr["args"] = map(lambda a: int(a)-1, args)
         return curr
     
     def _location_gap(self, loc, match, curr):
         args = self._location_split(match.group("args"))
         self._assert(len(args) == 1, "Invalid `gap` argument list: '%s'" % match.group("args"))
-        curr["gap"] = int(args[0])
+        curr["type"] = "gap"
+        curr["args"] = int(args[0])
         return curr
         
     def _location_ref(self, loc, match, curr):
         next = {"strand": curr.pop("strand")}
-        curr["reference"] = {
+        curr["type"] = "reference"
+        curr["args"] = {
             self._location_parse(match.group("acc"), None): self._location_parse(match.group("args"), next)
         }
         return curr
     
     def _location_site(self, loc, match, curr):
-        curr["site"] = [
+        curr["type"] = "site"
+        curr["args"] = [
             self._location_parse(match.group("start"), {}),
             self._location_parse(match.group("end"), {})
         ]
         return curr
     
     def _location_choice(self, loc, match, curr):
-        curr["choice"] = [int(match.group("start"))-1, int(match.group("end"))-1]
+        curr["type"] = "choice"
+        curr["args"] = [int(match.group("start"))-1, int(match.group("end"))-1]
         return curr
     
     def _location_span(self, loc, match, curr):
+        curr["type"] = "span"
         curr["start"] = self._location_parse(match.group("start"), {})
         curr["end"] = self._location_parse(match.group("end"), {})
         return curr
@@ -554,13 +561,15 @@ class GenbankParser(object):
     def _location_one_of(self, loc, match, curr):
         args = self._location_split(match.group("args"))
         self._assert(len(args) > 1, "Invalid `one-of` argument list: '%s'" % match.group("args"))
-        curr["one-of"] = map(lambda a: self._location_parse(a, {}), args)
+        curr["type"] = "one-of" 
+        curr["args"] = map(lambda a: self._location_parse(a, {}), args)
         return curr
     
     def _location_accession(self, loc, match, curr):
         return loc
 
     def _location_single(self, loc, match, curr):
+        curr["type"] = "single"
         if loc[:1] == "<":
             curr["fuzzy"] = "before"
             curr["coord"] = int(loc[1:])-1
@@ -652,7 +661,12 @@ __regexp__ = {
     "locus": {
         "length":           re.compile(r"^(?P<value>\d+)$"),
         "type":             re.compile(r"^(?P<value>(aa|bp))$"),
-        "molecule_type":    re.compile(r"^(?P<value>(ss-|ds-|ms-)?(NA|DNA|RNA|tRNA|rRNA|mRNA|uRNA|snRNA|snoRNA))$"),
+        "molecule_type":    re.compile(r"""^(?P<value>(ss-|ds-|ms-)?
+                                            (
+                                                    NA |  DNA |    RNA |  tRNA | rRNA
+                                                | mRNA | uRNA |  scRNA | snRNA | snoRNA
+                                            )
+                                        )$""", re.VERBOSE),
         "strand_type":      re.compile(r"^(?P<value>(linear|circular))$"),
         "division":         re.compile(r"""^(?P<value>(
                                       PRI | ROD | MAM | VRT | INV
@@ -689,8 +703,8 @@ __regexp__ = {
         ("gap",             re.compile(r"^gap\((?P<args>\d+)\)$")),
         ("ref",             re.compile(r"^(?P<acc>[^:]+):(?P<args>.*)$")),
         ("site",            re.compile(r"^(?P<start>[^.]*)\^(?P<end>[^.]*)$")),
-        ("choice",          re.compile(r"^(?P<start>\d+)\.(?P<end>\d+)$")),
-        ("span",            re.compile(r"^(?P<start>[^.]*)\.\.(?P<end>[^.]*)$")),
+        ("choice",          re.compile(r"^\(?(?P<start>\d+)\.(?P<end>\d+)\)?$")),
+        ("span",            re.compile(r"^(?P<start>.*?)\.\.(?P<end>.*?)$")),
         ("one_of",          re.compile(r"^one-of\((?P<args>.*)\)$")),
         ("single",          re.compile(r"^[<>]?\d+$")),
         ("accession",       re.compile(r"^[A-Z0-9_]+(\.\d+)?$")),

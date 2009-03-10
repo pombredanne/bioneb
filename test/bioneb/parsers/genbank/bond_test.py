@@ -26,4 +26,5 @@ class BondTest(unittest.TestCase):
         self.assertEqual(len(bonds), 4)
         expected = [[11, 62], [15, 35], [21, 45], [25, 47]]
         for idx, bond in enumerate(bonds):
-            self.assertEqual(bond["location"]["bond"], expected[idx])
+            self.assertEqual(bond["location"]["type"], "bond")
+            self.assertEqual(bond["location"]["args"], expected[idx])

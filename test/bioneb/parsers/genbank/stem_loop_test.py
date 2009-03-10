@@ -24,10 +24,11 @@ class StemLoopTest(unittest.TestCase):
         features = list(parser.features())
         self.assertEqual(len(features), 14)
         self.assertEqual(features[6], {
-                "type": "stem_loop",
-                "location": {
-                    "strand": "forward",
-                    "start": {"fuzzy": False, "coord": 3505},
-                    "end": {"fuzzy": False, "coord": 3594}
-                }
-            })
+            "type": "stem_loop",
+            "location": {
+                "type": "span",
+                "strand": "forward",
+                "start": {"type": "single", "fuzzy": False, "coord": 3505},
+                "end": {"type": "single", "fuzzy": False, "coord": 3594}
+            }
+        })

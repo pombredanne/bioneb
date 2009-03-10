@@ -24,12 +24,14 @@ class FuzzyTest(unittest.TestCase):
         features = list(parser.features())
         self.assertEqual(len(features), 3)
         self.assertEqual(features[1]["location"], {
-                "strand": "forward",
-                "start": {"fuzzy": "before", "coord": 0},
-                "end": {"fuzzy": False, "coord": 50}
-            })
+            "type": "span",
+            "strand": "forward",
+            "start": {"type": "single", "fuzzy": "before", "coord": 0},
+            "end": {"type": "single", "fuzzy": False, "coord": 50}
+        })
         self.assertEqual(features[2]["location"], {
-                "strand": "forward",
-                "start": {"fuzzy": False, "coord": 51},
-                "end": {"fuzzy": "after", "coord": 704}
-            })
+            "type": "span",
+            "strand": "forward",
+            "start": {"type": "single", "fuzzy": False, "coord": 51},
+            "end": {"type": "single", "fuzzy": "after", "coord": 704}
+        })
