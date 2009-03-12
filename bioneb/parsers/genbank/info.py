@@ -4,7 +4,6 @@ import re
 
 import gbobj
 import location
-import stream
 
 KWNAMES = {"reference": "references", "dbsource": "db_source"}
 
@@ -85,7 +84,7 @@ def kw_version(stream, kw):
             ret["accessions"].append(token)
     return ret
 
-def kw_dbsource(self, kw):
+def kw_dbsource(stream, kw):
     _no_subkeys(stream, "DBSOURCE", kw)
     return kw["value"].strip()
 

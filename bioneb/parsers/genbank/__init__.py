@@ -3,11 +3,11 @@
 
 import re
 
+import bioneb.parsers.stream as stream
 import locus
 import info
 import features
 import gbobj
-import stream
 
 def parse(filename=None, handle=None, stream_seq=False):
     handle = stream.Stream(filename, handle)
