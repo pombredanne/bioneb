@@ -1,0 +1,39 @@
+
+import os
+
+import bioneb.parsers.genbank as gb
+
+class rec(object):
+    def __init__(self, fname, num=0):
+        self.fname = fname
+        self.num = num
+    def __call__(self, func):
+        fname = os.path.join(os.path.dirname(__file__), "data", self.fname)
+        def run():
+            rec = list(gb.parse(fname, stream_seq=False))[self.num]
+            func(rec)
+        run.func_name = func.func_name
+        return run
+
+class seq(object):
+    def __init__(self, fname, stream=False):
+        self.fname = fname
+        self.stream = stream
+    def __call__(self, func):
+        fname = os.path.join(os.path.dirname(__file__), "data", self.fname)
+        def run():
+            func(gb.parse(fname, stream_seq=self.stream))
+        run.func_name = func.func_name
+        return run            
+
+def eq(a, b):
+    assert a == b, "%r != %r" % (a, b)
+
+def ne(a, b):
+    assert a != b, "%r == %r" % (a, b)
+
+def has(a, b):
+    assert b in a, "%r not in %r" % (b, a)
+
+def hasnot(a, b):
+    assert b not in a, "%r in %r" % (b, a)

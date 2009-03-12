@@ -1,147 +1,162 @@
 
 import re
+import types
 
-from errors import *
-from patterns import *
+import gbobj
 
-class GBLocationParser(object):
+class LocationError(ValueError):
+    pass
 
-    def parse(self, loc):
-        return self._parse(loc, None)
+def parse(stream, initial):
+    loc = ''.join([initial] + parse_continuation(stream))
+    try:
+        return parse_str(loc)
+    except LocationError, inst:
+        stream.throw("Failed to parse location: %s\n%s" % (loc, str(inst)))
 
-    def _continuation(self):
-        for line in self._source:
-            match = LOC_CONT.match(line)
-            if not match:
-                self._source.undo()
-                raise StopIteration
-            yield match.group("value")
+def parse_continuation(stream):
+    ret = []
+    for line in stream:
+        match = LOC_CONT.match(line)
+        if not match:
+            stream.undo(line)
+            return ret
+        ret.append(match.group("value"))
+    return ret
 
-    def _parse(self, loc, curr):
-        if curr is None:
-            curr = {"strand": "forward"}
-        loc = loc.strip()
-        for re in LOC_FUNCS:
-            match = re[1].match(loc)
-            if match is not None:
-                fn = getattr(self, '_%s' % re[0])
-                return fn(loc, match, curr=curr)
-        raise LocationError(
-            filename=self._source.filename,
-            lineno=self._source.lineno,
-            mesg="Unable to parse location: '%s'" % loc
-        )
-    
-    def _complement(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) == 1,
-            "Invalid `complement` argument list: '%s'" % match.group("args"))
-        curr["strand"] = "reverse"
-        self._parse(args[0], curr)
-        return curr
-
-    def _join(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) > 1,
-            "Invalid `join` argument list: '%s'" % match.group("args"))
-        curr["type"] = "join"
-        curr["args"] = map(self._parse, args)
-        return curr
-
-    def _order(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) > 1,
-            "Invalid `order` argument list: '%s'" % match.group("args"))
-        curr["type"] = "order"
-        curr["args"] = map(self._parse, args)
-        return curr
-
-    def _bond(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) == 2,
-            "Invalid `bond` argument list: '%s'" % match.group("args"))
-        curr["type"] = "bond"
-        curr["args"] = map(lambda a: int(a)-1, args)
-        return curr
-    
-    def _gap(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) == 1,
-                "Invalid `gap` argument list: '%s'" % match.group("args"))
-        curr["type"] = "gap"
-        curr["args"] = int(args[0])
-        return curr
-        
-    def _ref(self, loc, match, curr):
-        next = {"strand": curr.pop("strand")}
-        curr["type"] = "reference"
-        key = self._parse(match.group("acc"), None)
-        val = self._parse(match.group("args"), next)
-        curr["args"] = {key: val}
-        return curr
-    
-    def _site(self, loc, match, curr):
-        curr["type"] = "site"
-        curr["args"] = [
-            self._parse(match.group("start"), {}),
-            self._parse(match.group("end"), {})
-        ]
-        return curr
-    
-    def _choice(self, loc, match, curr):
-        curr["type"] = "choice"
-        curr["args"] = [int(match.group("start"))-1, int(match.group("end"))-1]
-        return curr
-    
-    def _span(self, loc, match, curr):
-        curr["type"] = "span"
-        curr["start"] = self._parse(match.group("start"), {})
-        curr["end"] = self._parse(match.group("end"), {})
-        return curr
-
-    def _one_of(self, loc, match, curr):
-        args = self._split(match.group("args"))
-        self._assert(len(args) > 1,
-                "Invalid `one-of` argument list: '%s'" % match.group("args"))
-        curr["type"] = "one-of" 
-        curr["args"] = map(lambda a: self._parse(a, {}), args)
-        return curr
-    
-    def _accession(self, loc, match, curr):
-        return loc
-
-    def _single(self, loc, match, curr):
-        curr["type"] = "single"
-        if loc[:1] == "<":
-            curr["fuzzy"] = "before"
-            curr["coord"] = int(loc[1:])-1
-        elif loc[:1] == ">":
-            curr["fuzzy"] = "after"
-            curr["coord"] = int(loc[1:])-1
+def parse_str(loc):
+    for re in LOC_FUNCS:
+        if not isinstance(loc, str):
+            print loc
+        match = re[1].match(loc)
+        if not match:
+            continue
+        if re[0] == "single":
+            return Single(*match.groups())
+        elif re[0] == "accession":
+            return loc
+        elif "vals" in match.groupdict():
+            return __loc_classes__[re[0]](*location_split(match.group("vals")))
+        elif "args" in match.groupdict():
+            args = []
+            if "acc" in match.groupdict():
+                args.append(match.group("acc"))
+            args.extend(map(parse_str, location_split(match.group("args"))))
+            return __loc_classes__[re[0]](*args)
+        elif "start" in match.groupdict():
+            start, end = match.group("start"), match.group("end")
+            return __loc_classes__[re[0]](start, end)
         else:
-            curr["fuzzy"] = False
-            curr["coord"] = int(loc)-1
-        return curr
+            fr, to = match.group("from"), match.group("to")
+            return __loc_classes__[re[0]](parse_str(fr), parse_str(to))
+    raise LocationError("Unable to parse location: '%s'" % loc)
 
-    def _split(self, args):
-        count = 0
-        last = 0
-        ret = []
-        for i in range(0, len(args)):
-            if args[i] == '(':
-                count += 1
-            elif args[i] == ')':
-                count -= 1
-            elif args[i] == ',':
-                if count == 0:
-                    ret.append(args[last:i])
-                    last = i+1
-        if count != 0:
-            raise LocationError(
-                filename=self._source.filename,
-                lineno=self._source.lineno,
-                mesg="Unbalanced parenthesis: '%s'" % args
-            )
-        ret.append(args[last:])
-        return ret
+def complement(arg):
+    arg["forward"] = False
+    return arg
+
+class Location(gbobj.GBObj):
+    def __init__(self):
+        self["forward"] = True
+        self["type"] = self.__class__.__name__.lower()
+
+class Join(Location):
+    def __init__(self, arg1, arg2, *args):
+        Location.__init__(self)
+        self["locations"] = [arg1, arg2] + list(args)
+
+class Order(Location):
+    def __init__(self, arg1, arg2, *args):
+        Location.__init__(self)
+        self["locations"] = [arg1, arg2] + list(args)
+
+class Bond(Location):
+    def __init__(self, arg1, arg2):
+        Location.__init__(self)
+        self["sites"] = [int(arg1)-1, int(arg2)-1]
+
+class Gap(Location):
+    def __init__(self, arg):
+        Location.__init__(self)
+        self["length"] = int(arg)-1
+
+class Reference(Location):
+    def __init__(self, acc, arg):
+        self["type"] = "reference"
+        self["accession"] = acc
+        self["location"] = arg
+
+class Site(Location):
+    def __init__(self, start, end):
+        Location.__init__(self)
+        self["start"] = int(start)-1
+        self["end"] = int(end)-1
+
+class Choice(Location):
+    def __init__(self, start, end):
+        Location.__init__(self)
+        self["choices"] = [int(start)-1, int(end)-1]
+
+class Span(Location):
+    def __init__(self, start, end):
+        Location.__init__(self)
+        self["start"] = start
+        self["end"] = end
+
+class OneOf(Location):
+    def __init__(self, arg1, *args):
+        self["type"] = "one-of"
+        self["choices"] = [arg1] + list(args)
+
+class Single(Location):
+    def __init__(self, arg):
+        self["type"] = "single"
+        if arg[:1] in "<>":
+            self["fuzzy"] = {"<": "before", ">": "after"}.get(arg[:1])
+            self["coord"] = int(arg[1:])-1
+        else:
+            self["fuzzy"] = False
+            self["coord"] = int(arg)-1
+
+def location_split(args):
+    count = 0
+    last = 0
+    ret = []
+    for i in range(0, len(args)):
+        if args[i] == '(':
+            count += 1
+        elif args[i] == ')':
+            count -= 1
+        elif args[i] == ',':
+            if count == 0:
+                ret.append(args[last:i])
+                last = i+1
+    if count != 0:
+        raise LocationError("Unbalanced parenthesis: '%s'" % args)
+    ret.append(args[last:])
+    return ret
+
+__loc_classes__ = dict([
+    (k.lower(), v)
+    for (k, v) in globals().copy().iteritems()
+    if type(v) == types.TypeType and issubclass(v, Location) and v != Location
+])
+__loc_classes__["complement"] = complement
+
+LOC_CONT    = re.compile(r"^\s{21}(?!/[^\s=]+(=.+)?$)(?P<value>.+)$")
+
+LOC_FUNCS = [
+    ("complement",  re.compile(r"^complement\((?P<args>.*)\)$")),
+    ("join",        re.compile(r"^join\((?P<args>.*)\)$")),
+    ("order",       re.compile(r"^order\((?P<args>.*)\)$")),
+    ("bond",        re.compile(r"^bond\((?P<vals>.*)\)$")),
+    ("gap",         re.compile(r"^gap\((?P<vals>\d+)\)$")),
+    ("reference",   re.compile(r"^(?P<acc>[^:]+):(?P<args>.*)$")),
+    ("site",        re.compile(r"^(?P<start>[^.]*)\^(?P<end>[^.]*)$")),
+    ("choice",      re.compile(r"^\(?(?P<start>\d+)\.(?P<end>\d+)\)?$")),
+    ("span",        re.compile(r"^(?P<from>.*?)\.\.(?P<to>.*?)$")),
+    ("oneof",       re.compile(r"^one-of\((?P<args>.*)\)$")),
+    ("single",      re.compile(r"^(?P<single>[<>]?\d+)$")),
+    ("accession",   re.compile(r"^[A-Z0-9_]+(\.\d+)?$")),
+]
 

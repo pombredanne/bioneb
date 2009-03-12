@@ -1,76 +1,83 @@
 # Copyright 2008 New England Biolabs <davisp@neb.com>
 
-import bioneb.parsers.utils as utils
+import datetime
+import re
+import time
 
-from errors import *
-from patterns import *
+import gbobj
 
-class Parser(utils.Parser):
-    def parse(self):
-        self.data = {}
+def parse(stream):
+    ret = gbobj.GBObj()
 
-        line = self.stream.next()
-        match = KEYWORD.match(line)
-        gb_assert(match, "Failed to parse LOCUS line: %s" % line)
-        key = match.group("name")
-        value = match.group("value")
-        tokens = kw["value"].split()
+    # Skip leading blank lines.
+    for line in stream:
+        if line.strip():
+            stream.undo(line)
+            break
 
-        self.data["name"] = tokens[0];
-        self.data["date"] = datetime.datetime(
-            *time.strptime(tokens[-1], "%d-%b-%Y")[0:6]
-        )
+    line = stream.next()
+    if not line.startswith("LOCUS"):
+        stream.throw("Failed to parse LOCUS line: %s" % line)
 
-        gb_assert(
-            self.data["date"] is not None,
-            "Failed to parse locus date: '%s'" % tokens[-1]
-        )
+    tokens = line[5:].split()
 
-        for token in tokens[1:-1]:
-            curr_name = None
-            curr_match = None
-            for name, lre in self.patterns.iteritems():
-                match = lre.match(token)
-                if curr_match and match:
-                    gb_raise(
-                        "Multiple matches for LOCUS attribute '%s'" % name
-                    )
-                elif match:
-                    curr_name, curr_match = name, match
-            self._assert(
-                curr_match,
-                "Failed to parse LOCUS token: '%s'" % token
+    ret["name"] = tokens[0];
+    ret["date"] = datetime.datetime(
+        *time.strptime(tokens[-1], "%d-%b-%Y")[0:6]
+    )
+
+    if ret["date"] is None:
+        stream.throw("Failed to parse locus date: '%s'" % tokens[-1])
+
+    patterns = {
+        "length": LENGTH,
+        "type": TYPE,
+        "molecule_type": MOL_TYPE,
+        "strand_type": STRAND_TYPE,
+        "division": DIVISION
+    }
+
+    for token in tokens[1:-1]:
+        curr_name = None
+        curr_match = None
+        for name, lre in patterns.iteritems():
+            match = lre.match(token)
+            if curr_match and match:
+                stream.throw(
+                    "Multiple matches for LOCUS attribute '%s'" % name
+                )
+            elif match:
+                curr_name, curr_match = name, match
+        if not curr_match:
+            stream.throw("Failed to parse LOCUS token: '%s'" % token)
+        if curr_name == "length":
+            ret[curr_name] = int(curr_match.group("value"))
+        else:
+            ret[curr_name] = curr_match.group("value")
+
+    return ret
+
+# Locus Section
+LENGTH      = re.compile(r"^(?P<value>\d+)$")
+TYPE        = re.compile(r"^(?P<value>(aa|bp))$")
+MOL_TYPE    = re.compile(r"""
+            ^
+            (?P<value>(ss-|ds-|ms-)?
+                (
+                        NA |  DNA |    RNA |  tRNA | rRNA
+                    | mRNA | uRNA |  scRNA | snRNA | snoRNA
+                )
             )
-            if curr_name == "length":
-                self.data[curr_name] = int(curr_match.group("value"))
-            else:
-                self.data[curr_name] = curr_match.group("value")
-
-class GBLocus(dict):
-    def __init__(self, *args, **kwargs):
-        super(GBLocus, self).__init__(*args, **kwargs)
-
-    length = property(
-        lambda: self.data.get("length"),
-        doc="Length of the molecule"
-    )
-
-    type = property(
-        lambda: self.data.get("type"),
-        doc="Basepair type."
-    )
-
-    molecule_type = property(
-        lambda: self.data.get("molecule_type"),
-        doc="Molecule type. DNA, RNA, mRNA, etc."
-    )
-
-    circular = property(
-        lambda: self.data.get("strand_type") == "circular",
-        doc="Return if this is a circular molecule."
-    )
-
-    division = property(
-        lambda: self.data.get("division"),
-        doc="Genbank division"
-    )
+            $""", re.VERBOSE)
+STRAND_TYPE = re.compile(r"^(?P<value>(linear|circular))$")
+DIVISION    = re.compile(r"""
+                ^
+                (?P<value>
+                    (
+                          PRI | ROD | MAM | VRT | INV
+                        | PLN | BCT | VRL | PHG | SYN
+                        | UNA | EST | PAT | STS | GSS
+                        | HTG | HTC | ENV | CON
+                      )
+                )
+                $""", re.VERBOSE)
