@@ -1,4 +1,8 @@
 # Copyright 2009 New England Biolabs <davisp@neb.com>
+#
+# This file is part of the BioNEB package released
+# under the MIT license.
+#
 import t
 
 ACCESSIONS = ["X55053", "X62281", "M81224", "AJ237582", "L31939", "AF297471"]

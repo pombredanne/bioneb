@@ -1,3 +1,9 @@
+# Copyright 2009 New England Biolabs <davisp@neb.com>
+#
+# This file is part of the BioNEB package released
+# under the MIT license.
+#
+
 def eq(a, b):
     assert a == b, "%r != %r" % (a, b)
 

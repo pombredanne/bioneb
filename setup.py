@@ -1,18 +1,14 @@
 #! /usr/bin/env python
 #
-#  Copyright 2008 New England Biolabs
+# Copyright 2009 New England Biolabs <davisp@neb.com>
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# This file is part of the BioNEB package released
+# under the MIT license.
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+"""\
+BioNEB - A collection of various parsers and other odds and ends I might
+end up writing.
+"""
 
 import os
 import sys
@@ -24,12 +20,12 @@ except ImportError:
 
 setup(
     name = "BioNEB",
-    version = "0.2",
+    version = "0.3",
     description = "BioNEB - Bioinformatics utilities",
-    long_description = "BioNEB - Bioinformatics utilities developed at New England Biolabs",
+    long_description = __doc__,
     author = "Paul Joseph Davis",
     author_email = "davisp@neb.com",
-    license = "Apache 2.0",
+    license = "MIT",
     url = "http://github.com/davisp/bioneb",
     zip_safe = False,
     
@@ -37,7 +33,8 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: Apache Software License",
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -46,10 +43,6 @@ setup(
     
     packages = [
         "bioneb",
-        "bioneb.parsers",
-        "bioneb.utils"
+        "bioneb.parsers"
     ],
 )
-        
-        
-    
