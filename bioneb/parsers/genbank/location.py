@@ -60,25 +60,52 @@ class Location(gbobj.GBObj):
         self["forward"] = True
         self["type"] = self.__class__.__name__.lower()
 
+    def __str__(self):
+        raise NotImplementedError()
+
 class Join(Location):
     def __init__(self, arg1, arg2, *args):
         Location.__init__(self)
         self["locations"] = [arg1, arg2] + list(args)
+
+    def __str__(self):
+        ret = "%s(%s)" % (self.type, ','.join(map(str, self["locations"])))
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
 
 class Order(Location):
     def __init__(self, arg1, arg2, *args):
         Location.__init__(self)
         self["locations"] = [arg1, arg2] + list(args)
 
+    def __str__(self):
+        ret = "%s(%s)" % (self.type, ','.join(map(str, self["locations"])))
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
+
 class Bond(Location):
     def __init__(self, arg1, arg2):
         Location.__init__(self)
         self["sites"] = [int(arg1)-1, int(arg2)-1]
 
+    def __str__(self):
+        ret = "%s(%s)" % (self.type, ','.join(map(str, self["sites"])))
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
+
 class Gap(Location):
     def __init__(self, arg):
         Location.__init__(self)
         self["length"] = int(arg)-1
+
+    def __str__(self):
+        ret = "%s(%s)" % (self.type, self["length"])
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
 
 class Reference(Location):
     def __init__(self, acc, arg):
@@ -86,16 +113,34 @@ class Reference(Location):
         self["accession"] = acc
         self["location"] = arg
 
+    def __str__(self):
+        ret = "%s:%s" % (self["accession"], self["location"])
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
+
 class Site(Location):
     def __init__(self, start, end):
         Location.__init__(self)
         self["start"] = int(start)-1
         self["end"] = int(end)-1
 
+    def __str__(self):
+        ret = "%s^%s" % (self["start"], self["end"])
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
+
 class Choice(Location):
     def __init__(self, start, end):
         Location.__init__(self)
         self["choices"] = [int(start)-1, int(end)-1]
+
+    def __str__(self):
+        ret = "%s.%s" % (self["choices"][0], self["choices"][1])
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
 
 class Span(Location):
     def __init__(self, start, end):
@@ -103,10 +148,19 @@ class Span(Location):
         self["start"] = start
         self["end"] = end
 
+    def __str__(self):
+        ret = "%s..%s" % (self["start"], self["end"])
+        if not self["forward"]:
+            ret = "complement(%s)" % ret
+        return ret
+
 class OneOf(Location):
     def __init__(self, arg1, *args):
         self["type"] = "one-of"
         self["choices"] = [arg1] + list(args)
+
+    def __str__(self):
+        return "%s(%s)" % (self["type"], ','.join(map(str, self["choices"])))
 
 class Single(Location):
     def __init__(self, arg):
@@ -117,6 +171,10 @@ class Single(Location):
         else:
             self["fuzzy"] = False
             self["coord"] = int(arg)-1
+
+    def __str__(self):
+        mod = {"before": "<", "after": ">", False: ""}.get(self["fuzzy"])
+        return "%s%s" % (mod, self["coord"])
 
 def location_split(args):
     count = 0
