@@ -9,7 +9,7 @@ __all__ = ["revcomp", "translate"]
 
 COMPLEMENTS = [
     "ACGTUNRYMSWKVDHBacgtunrymswkvdhb",
-    "TGCAANYRKWSMTCGAtgcaanyrkwsmtcga"
+    "TGCAANYRKSWMTCGAtgcaanyrkswmtcga"
 ]
 TRANSTABLE = string.maketrans(COMPLEMENTS[0], COMPLEMENTS[1])
 

@@ -34,3 +34,12 @@ def test_degnerate_to_X():
     t.eq(t.trans.translate("CAY"), "H")
     t.eq(t.trans.translate("CAR"), "Q")
     t.eq(t.trans.translate("CAN"), "X")
+
+def test_degenerate_error():
+    t.eq(t.trans.translate("ATG", table=11, replace_start=False), "M")
+    t.eq(t.trans.translate("ATC", table=11, replace_start=False), "I")
+    t.eq(t.trans.translate("ATS", table=11, replace_start=False), "X")
+
+def test_degenerate_in_seq():
+    seq = "CTGATCGTCATSTGTATCACC"
+    t.eq(t.trans.translate(seq, table=11, replace_start=False), "LIVXCIT")
