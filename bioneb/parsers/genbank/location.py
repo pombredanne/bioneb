@@ -127,7 +127,7 @@ class Gap(Location):
 
 class Reference(Location):
     def __init__(self, acc, arg):
-        self["type"] = "reference"
+        Location.__init__(self)
         self["accession"] = acc
         self["location"] = arg
 
