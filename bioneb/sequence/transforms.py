@@ -8,8 +8,8 @@ import string
 __all__ = ["revcomp", "translate"]
 
 COMPLEMENTS = [
-    "ACGTUNRYMSWKVDHBacgtunrymswkvdhb",
-    "TGCAANYRKSWMTCGAtgcaanyrkswmtcga"
+    "ACGTUNSWMKRYVDHBacgtunswmkryvdhb",
+    "TGCAANSWKMYRBHDVtgcaanswkmyrbhdv"
 ]
 TRANSTABLE = string.maketrans(COMPLEMENTS[0], COMPLEMENTS[1])
 
