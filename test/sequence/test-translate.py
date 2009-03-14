@@ -21,3 +21,16 @@ def test_table_check():
 
 def test_start_codon_replace():
     t.eq(t.trans.translate("TTGTTG"), "ML")
+
+def test_simple_degenerate():
+    t.eq(t.trans.translate("ACN"), "T")
+
+def test_degenerate_causes_not_start():
+    t.eq(t.trans.translate("GTG", table=2), "M")
+    t.eq(t.trans.translate("GTG", table=2, replace_start=False), "V")
+    t.eq(t.trans.translate("GTR", table=2), "V")
+
+def test_degnerate_to_X():
+    t.eq(t.trans.translate("CAY"), "H")
+    t.eq(t.trans.translate("CAR"), "Q")
+    t.eq(t.trans.translate("CAN"), "X")

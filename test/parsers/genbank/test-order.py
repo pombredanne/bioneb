@@ -14,6 +14,7 @@ def test_order(rec):
         "locations": [
             {
                 "type": "reference",
+                "forward": True,
                 "accession": "U18266.1",
                 "location": {
                     "type": "span",
@@ -34,6 +35,7 @@ def test_order(rec):
             },
             {
                 "type": "reference",
+                "forward": True,
                 "accession": "U18268.1",
                 "location": {
                     "type": "span",
@@ -48,6 +50,7 @@ def test_order(rec):
             },
             {
                 "type": "reference",
+                "forward": True,
                 "accession": "U18270.1",
                 "location": {
                     "type": "span",
@@ -62,6 +65,7 @@ def test_order(rec):
             },
             {
                 "type": "reference",
+                "forward": True,
                 "accession": "U18269.1",
                 "location": {
                     "type": "span",
@@ -76,6 +80,7 @@ def test_order(rec):
             },
             {
                 "type": "reference",
+                "forward": True,
                 "accession": "U18271.1",
                 "location": {
                     "type": "span",
