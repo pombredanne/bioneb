@@ -20,7 +20,7 @@ except ImportError:
 
 setup(
     name = "BioNEB",
-    version = "0.3",
+    version = "0.4",
     description = "BioNEB - Bioinformatics utilities",
     long_description = __doc__,
     author = "Paul Joseph Davis",
