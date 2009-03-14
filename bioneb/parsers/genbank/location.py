@@ -6,7 +6,9 @@
 import re
 import types
 
+import bioneb.sequence.transforms as trans
 import gbobj
+
 
 class LocationError(ValueError):
     pass
@@ -66,6 +68,9 @@ class Location(gbobj.GBObj):
 
     def __str__(self):
         raise NotImplementedError()
+    
+    def extract(self, seq):
+        raise NotImplementedError()
 
 class Join(Location):
     def __init__(self, arg1, arg2, *args):
@@ -76,6 +81,12 @@ class Join(Location):
         ret = "%s(%s)" % (self.type, ','.join(map(str, self["locations"])))
         if not self["forward"]:
             ret = "complement(%s)" % ret
+        return ret
+    
+    def extract(self, seq):
+        ret = ''.join(map(lambda x: x.extract(seq), self.locations))
+        if not self.forward:
+            return trans.revcomp(ret)
         return ret
 
 class Order(Location):
@@ -110,6 +121,9 @@ class Gap(Location):
         if not self["forward"]:
             ret = "complement(%s)" % ret
         return ret
+
+    def extract(self, seq):
+        return "N" * self.length
 
 class Reference(Location):
     def __init__(self, acc, arg):
@@ -156,6 +170,13 @@ class Span(Location):
         ret = "%s..%s" % (self["start"], self["end"])
         if not self["forward"]:
             ret = "complement(%s)" % ret
+        return ret
+
+    def extract(self, seq):
+        # end+1 to account for python slice semantics
+        ret = seq[self.start.coord:self.end.coord+1]
+        if not self.forward:
+            return trans.revcomp(ret)
         return ret
 
 class OneOf(Location):
