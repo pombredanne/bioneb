@@ -34,7 +34,7 @@ def translate(seq, table=1, replace_start=True):
 
 DEGENERATES = {
     "A": "A",   "C": "C",   "G": "G",   "T": "T",   "U": "U",
-    "W": "AT",  "S": "CG",  "M": "AC",  "K": "AG",  "R": "AG",  "Y": "CT",
+    "W": "AT",  "S": "CG",  "M": "AC",  "K": "GT",  "R": "AG",  "Y": "CT",
     "B": "AGT", "D": "ACT", "H": "ACT", "V": "ACG", "N": "ACGT"
 }
 class TranslationTable(object):

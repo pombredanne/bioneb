@@ -8,7 +8,7 @@ def test_simple():
     t.eq(t.trans.revcomp("ACGT"), "ACGT")
     t.eq(t.trans.revcomp("TGGGGCCAA"), "TTGGCCCCA")
     t.eq(t.trans.revcomp("CCCCA"), "TGGGG")
-    t.eq(t.trans.revcomp("MDggC"), "GccCK")
+    t.eq(t.trans.revcomp("MDggC"), "GccHK")
 
 def test_degenerate():
     # This was a fun one to figure out.

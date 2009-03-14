@@ -43,3 +43,7 @@ def test_degenerate_error():
 def test_degenerate_in_seq():
     seq = "CTGATCGTCATSTGTATCACC"
     t.eq(t.trans.translate(seq, table=11, replace_start=False), "LIVXCIT")
+
+def test_degenerate_regresion():
+    t.eq(t.trans.translate("GCGCCCAAKACGCAA", table=11), "APXTQ")
+
