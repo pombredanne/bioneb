@@ -21,9 +21,12 @@ def do_cmp(nucl, prot, gbk):
     for cds in cdses:
         n = nucl.next()
         p = prot.next()
-        seq = cds.location.extract(gbk.sequence)
-        t.eq(seq, n.seq)
-        t.eq(trans.translate(seq, table=11).rstrip("*"), p.seq)
+        try:
+            t.eq(cds.extract(gbk.sequence), n.seq)
+            t.eq(cds.translate(gbk.sequence), p.seq)
+        except:
+            print "%s -> %s" % (gbk.locus.name, cds.location)
+            raise
 
 @stream("extract-fuzzy/NC_008381")
 def test_fuzzy_extraction(nucl, prot, gbk):

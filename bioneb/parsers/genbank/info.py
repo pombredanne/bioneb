@@ -208,7 +208,7 @@ def _no_subkeys(stream, kw, value):
         stream.throw("%s must not have sub-keywords." % kw)
 
 __kw_parsers__ = dict(
-    [(k, v) for (k, v) in globals().copy().iteritems() if k.startswith("kw_")]
+    [(k, v) for (k, v) in globals().copy().iteritems() if k[:3] == "kw_"]
 )
 __kw_parsers__["kw_base count"] = _counts
 

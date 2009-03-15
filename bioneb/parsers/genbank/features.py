@@ -7,6 +7,42 @@ import re
 
 import gbobj
 import location
+import bioneb.sequence as bioseq
+
+class Feature(gbobj.GBObj):
+    def extract(self, sequence):
+        try:
+            return self.location.extract(sequence)
+        except NotImplementedError:
+            raise ValueError("Unable to extract location: %s" % self.location)
+
+    def translate(self, sequence):
+        if self.type != "cds":
+            raise ValueError("Failed to translate type: %s" % self.type)
+        try:
+            dna = self.location.extract(sequence)
+        except NotImplementedError:
+            raise ValueError("Unable to extract location: %s" % self.location)
+        mods = []
+        try:
+            if hasattr(self, "transl_except"):
+                positions = [
+                    (self.location.offset(m.location), m.modification)
+                    for m in self.transl_except
+                ]
+                for pos in positions:
+                    for p in pos[0]:
+                        if ((p[1] - p[0]) + 1) != 3:
+                            raise ValueError("Invalid modification length.")
+                        mods.append((p[0], pos[1]))
+        except NotImplementedError:
+            mods = []
+        return bioseq.translate(dna,
+            table=self.transl_table,
+            start=self.codon_start,
+            modifications=mods,
+            partial=self.location.fuzzy()
+        )
 
 def parse(stream):
     line = iter(stream).next()
@@ -24,7 +60,7 @@ def parse(stream):
         if not match:
             stream.throw("Failed to parse KEY from: '%s'" % line.strip())
 
-        key = gbobj.GBObj({
+        feat = Feature({
             "type": match.group("type").lower(),
             "location": location.parse(stream, match.group("location"))
         })
@@ -32,14 +68,18 @@ def parse(stream):
         for q in parse_qualifiers(stream):
             if q["name"] in ["type", "location"]:
                 stream.throw("Invalid qualifier name: '%s'" % q["name"])
-            curr = key.get(q["name"], None)
+            curr = feat.get(q["name"], None)
             if curr is None:
-                key[q["name"]] = q["value"]
+                feat[q["name"]] = q["value"]
             elif isinstance(curr, list):
-                key[q["name"]].append(q["value"])
+                feat[q["name"]].append(q["value"])
             else:
-                key[q["name"]] = [curr, q["value"]]
-        ret.append(key)
+                feat[q["name"]] = [curr, q["value"]]
+        for qual in feat:
+            if qual not in __qual_modifiers__:
+                continue
+            feat[qual] = __qual_modifiers__[qual](feat, feat[qual])
+        ret.append(feat)
     return ret
     
 def parse_qualifiers(stream):
@@ -65,9 +105,6 @@ def parse_qualifiers(stream):
             })
             q["value"].extend(parse_continuation(stream))
             q["value"] = ' '.join(q["value"]).strip('"')
-            # Hackish as all hell
-            if q["name"].lower() == "translation":
-                q["value"] = ''.join(q["value"].split()).upper()
             ret.append(q)
 
 def parse_continuation(stream):
@@ -81,6 +118,44 @@ def parse_continuation(stream):
         if ret[-1].endswith('"'):
             break
     return ret
+
+def mod_codon_start(feat, value):
+    return int(value)-1
+
+def mod_transl_table(feat, value):
+    return int(value)
+
+def mod_transl_except(feat, value):
+    ret = []
+    mods = value
+    if not isinstance(mods, list):
+        mods = [mods]
+    for value in mods:
+        if value[:1] != "(" or value[-1:] != ")":
+            raise ValueError("Invalidly formatted transl_except: %s" % value)
+        parts = location.location_split(value[1:-1])
+        if len(parts) != 2:
+            raise ValueError("Failed to split transl_except: %s" % value)
+        if parts[0][:4] != "pos:":
+            raise ValueError("Invalid transl_except position: %s" % parts[0])
+        if parts[1][:3] != "aa:":
+            raise ValueError("Unknown transl_except modification: %s" % parts[1])
+        loc = location.parse_str(parts[0][4:])
+        acid = parts[1][3:].upper()
+        if acid not in bioseq.data.AMINO_ACID_TLC:
+            raise ValueError("Unknown Amino Acid code: %s" % acid)
+        ret.append(gbobj.GBObj({
+            "location": loc,
+            "modification": bioseq.data.AMINO_ACID_TLC[acid]
+        }))
+    return ret
+
+def mod_translation(feat, value):
+    return ''.join(value.split()).upper()
+
+__qual_modifiers__ = dict(
+    [(k[4:], v) for k, v in globals().copy().iteritems() if k[:4] == "mod_"]
+)
 
 FEATURES    = re.compile(r"^FEATURES\s+Location/Qualifiers$")
 KEY         = re.compile(r"^\s{5}(?P<type>\S+)\s+(?P<location>\S.*)$")

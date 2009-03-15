@@ -6,12 +6,12 @@
 import t
 
 def test_single():
-    t.eq(t.trans.translate("TGG"), "W")
-    t.eq(t.trans.translate("CTG", table=11, replace_start=False), "L")
+    t.eq(t.trans.translate("TGG", partial=True), "W")
+    t.eq(t.trans.translate("CTG", table=11, partial=True), "L")
 
 def test_alternate():
-    t.eq(t.trans.translate("TGA"), "*")
-    t.eq(t.trans.translate("TGA", table=2), "W")
+    t.eq(t.trans.translate("TGA", partial=True), "*")
+    t.eq(t.trans.translate("TGA", table=2, partial=True), "W")
 
 def test_length_check():
     t.raises(ValueError, t.trans.translate, "AC")
@@ -23,27 +23,28 @@ def test_start_codon_replace():
     t.eq(t.trans.translate("TTGTTG"), "ML")
 
 def test_simple_degenerate():
-    t.eq(t.trans.translate("ACN"), "T")
+    t.eq(t.trans.translate("ACN", partial=True), "T")
 
 def test_degenerate_causes_not_start():
     t.eq(t.trans.translate("GTG", table=2), "M")
-    t.eq(t.trans.translate("GTG", table=2, replace_start=False), "V")
-    t.eq(t.trans.translate("GTR", table=2), "V")
+    t.eq(t.trans.translate("GTG", table=2, partial=True), "V")
+    t.eq(t.trans.translate("GTR", table=2), "X")
+    t.eq(t.trans.translate("GTR", table=2, partial=True), "V")
 
 def test_degnerate_to_X():
-    t.eq(t.trans.translate("CAY"), "H")
-    t.eq(t.trans.translate("CAR"), "Q")
-    t.eq(t.trans.translate("CAN"), "X")
+    t.eq(t.trans.translate("CAY", partial=True), "H")
+    t.eq(t.trans.translate("CAR", partial=True), "Q")
+    t.eq(t.trans.translate("CAN", partial=True), "X")
 
 def test_degenerate_error():
-    t.eq(t.trans.translate("ATG", table=11, replace_start=False), "M")
-    t.eq(t.trans.translate("ATC", table=11, replace_start=False), "I")
-    t.eq(t.trans.translate("ATS", table=11, replace_start=False), "X")
+    t.eq(t.trans.translate("ATG", table=11, partial=True), "M")
+    t.eq(t.trans.translate("ATC", table=11, partial=True), "I")
+    t.eq(t.trans.translate("ATS", table=11, partial=True), "X")
 
 def test_degenerate_in_seq():
     seq = "CTGATCGTCATSTGTATCACC"
-    t.eq(t.trans.translate(seq, table=11, replace_start=False), "LIVXCIT")
+    t.eq(t.trans.translate(seq, table=11, partial=True), "LIVXCIT")
 
 def test_degenerate_regresion():
-    t.eq(t.trans.translate("GCGCCCAAKACGCAA", table=11), "APXTQ")
+    t.eq(t.trans.translate("GCGCCCAAKACGCAA", table=11, partial=True), "APXTQ")
 

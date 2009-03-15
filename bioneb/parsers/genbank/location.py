@@ -9,7 +9,6 @@ import types
 import bioneb.sequence.transforms as trans
 import gbobj
 
-
 class LocationError(ValueError):
     pass
 
@@ -72,6 +71,15 @@ class Location(gbobj.GBObj):
     def extract(self, seq):
         raise NotImplementedError()
 
+    def fuzzy(self):
+        raise NotImplementedError()
+
+    def offset(self, loc):
+        raise NotImplementedError()
+
+    def length(self):
+        raise NotImplementedError()
+
 class Join(Location):
     def __init__(self, arg1, arg2, *args):
         Location.__init__(self)
@@ -89,10 +97,40 @@ class Join(Location):
             return trans.revcomp(ret)
         return ret
 
+    def fuzzy(self):
+        start = self.locations[0].fuzzy()[0]
+        end = self.locations[-1].fuzzy()[1]
+        if not self.forward:
+            return (end, start)
+        return (start, end)
+
+    def offset(self, loc):
+        positions = []
+        currlength = 0
+        for l in self.locations:
+            ret = l.offset(loc)
+            for p in ret:
+                positions.append((p[0] + currlength, p[1] + currlength))
+            currlength += l.length()
+        if self.forward:
+            return positions
+        # Need to reverse everything
+        ret = []
+        for p in positions[::-1]:
+            ret.append((currlength - p[1], currlength - p[0]))
+        return ret
+
 class Order(Location):
     def __init__(self, arg1, arg2, *args):
         Location.__init__(self)
         self["locations"] = [arg1, arg2] + list(args)
+
+    def fuzzy(self):
+        start = self.locations[0].fuzzy()[0]
+        end = self.locations[-1].fuzzy()[1]
+        if not self.forward:
+            return (end, start)
+        return (start, end)
 
     def __str__(self):
         ret = "%s(%s)" % (self.type, ','.join(map(str, self["locations"])))
@@ -125,6 +163,9 @@ class Gap(Location):
     def extract(self, seq):
         return "N" * self.length
 
+    def length(self):
+        return self["length"]
+
 class Reference(Location):
     def __init__(self, acc, arg):
         Location.__init__(self)
@@ -136,6 +177,15 @@ class Reference(Location):
         if not self["forward"]:
             ret = "complement(%s)" % ret
         return ret
+    
+    def fuzzy(self):
+        return self.location.fuzzy()
+    
+    def offset(self, loc):
+        return self.location.offset(loc)
+    
+    def length(self):
+        return self.location.length()
 
 class Site(Location):
     def __init__(self, start, end):
@@ -172,12 +222,41 @@ class Span(Location):
             ret = "complement(%s)" % ret
         return ret
 
+    def fuzzy(self):
+        start = self.start.fuzzy()
+        end = self.end.fuzzy()
+        if not self.forward:
+            return (end, start)
+        return (start, end)        
+
     def extract(self, seq):
         # end+1 to account for python slice semantics
         ret = seq[self.start.coord:self.end.coord+1]
         if not self.forward:
             return trans.revcomp(ret)
         return ret
+
+    def offset(self, loc):
+        if self.type != loc.type:
+            return []
+        if self.forward != loc.forward:
+            return []
+        if self.start.coord > loc.start.coord:
+            return []
+        if self.end.coord < loc.end.coord:
+            return []
+        if loc.start.coord > loc.end.coord:
+            return []
+        if self.forward:
+            start = loc.start.coord - self.start.coord
+            end = loc.end.coord - self.start.coord
+        else:
+            start = self.end.coord - loc.end.coord
+            end = self.end.coord - loc.start.coord
+        return [(start, end)]
+
+    def length(self):
+        return 1 + (self.end.coord - self.start.coord)
 
 class OneOf(Location):
     def __init__(self, arg1, *args):
@@ -200,6 +279,9 @@ class Single(Location):
     def __str__(self):
         mod = {"before": "<", "after": ">", False: ""}.get(self["fuzzy"])
         return "%s%s" % (mod, self["coord"])
+
+    def fuzzy(self):
+        return self["fuzzy"] != False
 
 def location_split(args):
     count = 0

@@ -4,4 +4,5 @@
 # under the MIT license.
 #
 
+import data
 from transforms import revcomp, translate
