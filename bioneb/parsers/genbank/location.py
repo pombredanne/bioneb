@@ -68,7 +68,7 @@ class Location(gbobj.GBObj):
 
     def __str__(self):
         raise NotImplementedError()
-    
+
     def extract(self, seq):
         raise NotImplementedError()
 

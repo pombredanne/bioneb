@@ -20,16 +20,19 @@ CODON_TABLES = {}
 def translate(seq, table=1, replace_start=True):
     if table not in CODON_TABLES:
         raise ValueError("Unknown translation table: %s" % table)
-    if len(seq) % 3 != 0:
-        raise ValueError("Sequnce length is not a multiple of 3.")
+    if len(seq) < 3:
+        raise ValueError("Sequnce length is too short.")
     t = CODON_TABLES[table]
-    (acid, is_start) = t.translate(seq[:3])
+    (acid, is_start) = t.translate(seq[:3], len(seq) == 3)
     if replace_start and is_start:
         ret = ["M"]
+    elif replace_start:
+        ret = ["X"]
     else:
         ret = [acid]
-    for i in xrange(3, len(seq), 3):
-        ret.append(t.translate(seq[i:i+3])[0])
+    seqlen = len(seq)
+    for i in xrange(3, seqlen-(seqlen%3), 3):
+        ret.append(t.translate(seq[i:i+3], i == len(seq) - 3)[0])
     return ''.join(ret)
 
 DEGENERATES = {
@@ -41,7 +44,7 @@ class TranslationTable(object):
     def __init__(self, codons, starts):
         self.codons = codons
         self.starts = starts
-    def translate(self, codon):
+    def translate(self, codon, is_stop):
         assert len(codon) == 3, "Invalid codon: %s" % codon
         degen = map(lambda b: DEGENERATES.get(b, b), codon)
         degencodons = [
@@ -52,10 +55,18 @@ class TranslationTable(object):
         ]
         acids = set(map(lambda x: self.codons.get(x, 'X'), degencodons))
         starts = set(map(lambda x: self.starts.get(x, False), degencodons))
-        if len(acids) > 1:
-            acid = 'X'
-        else:
+        if len(acids) == 1 and acids == set("*") and not is_stop:
+            acid = "X"
+        elif len(acids) == 1:
             acid = acids.pop()
+        elif acids == set("DN"):
+            acid = "B"
+        elif acids == set("EQ"):
+            acid = "Z"
+        elif acids == set("IL"):
+            acid = "J"
+        else:
+            acid = "X"
         if len(starts) > 1:
             start = False
         else:
