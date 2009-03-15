@@ -34,13 +34,13 @@ def translate(seq, table=1, start=0, modifications=None, partial=False):
     for i in xrange(3, seqlen-(seqlen%3), 3):
         ret.append(t.translate(seq[i:i+3], i == len(seq) - 3)[0])
     ret = ''.join(ret)
-    if not partial[1] and ret[-1:] == "*":
-        ret = ret[:-1]
     for m in modifications:
         if m[0] % 3 != 0:
             raise ValueError("Invalid modification coordinate: %s" % m[0])
         idx = m[0]/3
         ret = "%s%s%s" % (ret[:idx], m[1], ret[idx+1:])
+    if not partial[1] and ret[-1:] == "*":
+        ret = ret[:-1]
     return ret
 
 class TranslationTable(object):
