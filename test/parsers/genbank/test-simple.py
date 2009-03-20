@@ -49,7 +49,7 @@ def test_simple(rec):
         {
             "type":         "source",
             "organism":     "Mus musculus",
-            "db_xref":      "taxon:10090",
+            "db_xref":      {"taxon": "10090"},
             "map":          "4 42.6 cM",
             "chromosome":   "4",
             "location": {
@@ -81,7 +81,7 @@ def test_simple(rec):
         {
             "type":         "region",
             "region_name":  "Interferon alpha/beta domain",
-            "db_xref":      "CDD:pfam00143",
+            "db_xref":      {"CDD": "pfam00143"},
             "note":         "interferon",
             "location": {
                 "type": "span",
@@ -103,7 +103,7 @@ def test_simple(rec):
         {
             "type":         "region",
             "region_name":  "Interferon alpha, beta and delta.",
-            "db_xref":      "CDD:IFabd",
+            "db_xref":      {"CDD": "IFabd"},
             "note":         "IFabd",
             "location": {
                 "type": "span",
@@ -115,7 +115,7 @@ def test_simple(rec):
         {
             "type":         "cds",
             "gene":         "Ifnb",
-            "db_xref":      ["LocusID:15977", "MGD:MGI:107657"],
+            "db_xref":      {"LocusID" :"15977", "MGD": "MGI:107657"},
             "coded_by":     "NM_010510.1:21..569",
             "location": {
                 "type": "span",

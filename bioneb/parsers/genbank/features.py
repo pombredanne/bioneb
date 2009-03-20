@@ -119,6 +119,24 @@ def parse_continuation(stream):
             break
     return ret
 
+xrefre = re.compile(r"^([^:]+):(.+)$")
+def mod_db_xref(feat, value):
+    ret = {}
+    if not isinstance(value, list):
+        value = [value]
+    for val in value:
+        match = xrefre.match(val)
+        if not match:
+            raise ValueError("Failed to parse db_xref: %s" % val)
+        db, link = match.groups()
+        if db not in ret:
+            ret[db] = link
+        elif isinstance(ret[db], list):
+            ret[db].append(link)
+        else:
+            ret[db] = [ret[db], link]
+    return ret
+
 def mod_codon_start(feat, value):
     return int(value)-1
 
